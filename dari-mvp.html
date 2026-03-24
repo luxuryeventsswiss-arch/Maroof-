@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دری یاد بگیر — Dari Lernen</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Sans+Arabic:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1916;
+    --surface2: #242220;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: #7a6330;
+    --cream: #f5ecd7;
+    --cream-dim: #a89878;
+    --red: #c45c3a;
+    --green: #4a8c6f;
+    --text: #f0e8d8;
+    --text-dim: #7a7060;
+    --border: rgba(201,168,76,0.18);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(201,168,76,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(201,168,76,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
+
+  /* Header */
+  .header {
+    padding: 28px 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    direction: ltr;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 18px;
+    color: #0f0e0c;
+    font-weight: 700;
+  }
+  .logo-text { font-size: 15px; font-weight: 600; color: var(--cream); letter-spacing: -.3px; }
+  .logo-sub  { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+
+  .xp-pill {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--gold-light);
+    font-weight: 500;
+    direction: ltr;
+  }
+
+  /* Nav tabs */
+  .nav {
+    display: flex;
+    margin: 0 16px 24px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 4px;
+    direction: ltr;
+    gap: 2px;
+  }
+  .nav-btn {
+    flex: 1; border: none; background: transparent;
+    color: var(--text-dim); font-size: 12px; font-weight: 500;
+    padding: 8px 4px; border-radius: 12px; cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .nav-btn .nav-icon { font-size: 16px; }
+  .nav-btn.active {
+    background: var(--gold);
+    color: #0f0e0c;
+    font-weight: 600;
+  }
+
+  /* Screens */
+  .screen { display: none; padding: 0 16px; animation: fadeIn .3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: none; } }
+
+  /* Section title */
+  .section-title {
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    letter-spacing: .1em; text-transform: uppercase;
+    margin-bottom: 14px; direction: ltr;
+  }
+
+  /* ══ ALPHABET SCREEN ══ */
+  .alphabet-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .letter-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    direction: rtl;
+  }
+  .letter-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .letter-card.learned { border-color: var(--green); background: rgba(74,140,111,0.1); }
+  .letter-arabic {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 28px;
+    color: var(--cream);
+    line-height: 1.2;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .letter-latin { font-size: 11px; color: var(--text-dim); direction: ltr; }
+  .letter-name  { font-size: 10px; color: var(--gold-dim); direction: ltr; margin-top: 2px; }
+
+  /* Letter detail modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 100;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 28px;
+    max-width: 320px; width: 90%;
+    text-align: center;
+    direction: rtl;
+  }
+  .modal-letter {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 80px; color: var(--gold);
+    line-height: 1; margin-bottom: 16px;
+    display: block;
+  }
+  .modal-name { font-size: 20px; font-weight: 600; color: var(--cream); direction: ltr; margin-bottom: 6px; }
+  .modal-trans { font-size: 14px; color: var(--text-dim); direction: ltr; margin-bottom: 24px; }
+  .modal-example {
+    background: var(--surface);
+    border-radius: 12px; padding: 14px;
+    margin-bottom: 20px;
+  }
+  .modal-example-word {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 28px; color: var(--cream); display: block; margin-bottom: 4px;
+  }
+  .modal-example-latin { font-size: 13px; color: var(--text-dim); direction: ltr; }
+  .btn {
+    border: none; border-radius: 12px; padding: 12px 24px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-gold { background: var(--gold); color: #0f0e0c; }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); margin-right: 8px;
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-play {
+    background: rgba(201,168,76,0.12); border: 1px solid var(--border);
+    color: var(--gold); border-radius: 99px; padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .2s; margin-bottom: 20px;
+    direction: ltr;
+  }
+  .btn-play:hover { background: rgba(201,168,76,0.2); }
+
+  /* ══ VOCABULARY SCREEN ══ */
+  .vocab-categories {
+    display: flex; gap: 8px; margin-bottom: 20px;
+    overflow-x: auto; padding-bottom: 4px; direction: ltr;
+  }
+  .cat-btn {
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-dim); border-radius: 99px;
+    padding: 7px 14px; font-size: 12px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .cat-btn.active { background: var(--gold); color: #0f0e0c; border-color: var(--gold); }
+
+  .vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .vocab-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px;
+    cursor: pointer; transition: all .2s;
+    direction: rtl; position: relative; overflow: hidden;
+  }
+  .vocab-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .vocab-emoji { font-size: 32px; margin-bottom: 10px; display: block; }
+  .vocab-dari {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 20px; color: var(--cream); display: block; margin-bottom: 4px;
+  }
+  .vocab-phonetic { font-size: 11px; color: var(--gold-dim); direction: ltr; display: block; }
+  .vocab-german { font-size: 12px; color: var(--text-dim); direction: ltr; display: block; margin-top: 3px; }
+  .vocab-card .play-icon {
+    position: absolute; bottom: 10px; left: 10px;
+    width: 24px; height: 24px; background: rgba(201,168,76,0.15);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--gold);
+  }
+
+  /* ══ SENTENCES SCREEN ══ */
+  .sentence-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px; padding: 22px;
+    margin-bottom: 14px; direction: rtl;
+    cursor: pointer; transition: all .2s;
+  }
+  .sentence-card:hover { border-color: var(--gold); }
+  .sentence-dari {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 24px; color: var(--cream);
+    line-height: 1.7; display: block; margin-bottom: 8px;
+  }
+  .sentence-phonetic {
+    font-size: 12px; color: var(--gold-dim); direction: ltr;
+    display: block; margin-bottom: 6px;
+  }
+  .sentence-german { font-size: 14px; color: var(--text-dim); direction: ltr; }
+  .sentence-actions {
+    display: flex; gap: 8px; margin-top: 14px; direction: ltr;
+  }
+  .tag-pill {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 99px; padding: 4px 10px;
+    font-size: 11px; color: var(--gold-dim);
+  }
+
+  /* ══ QUIZ SCREEN ══ */
+  .quiz-progress {
+    background: var(--surface); border-radius: 99px; height: 4px;
+    margin-bottom: 24px; direction: ltr;
+  }
+  .quiz-progress-fill {
+    height: 4px; background: var(--gold); border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .quiz-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px 24px;
+    text-align: center; margin-bottom: 20px; direction: rtl;
+  }
+  .quiz-prompt { font-size: 13px; color: var(--text-dim); direction: ltr; margin-bottom: 16px; }
+  .quiz-dari {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 48px; color: var(--cream); line-height: 1.3;
+    display: block; margin-bottom: 8px;
+  }
+  .quiz-phonetic { font-size: 13px; color: var(--gold-dim); direction: ltr; }
+  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quiz-opt {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 16px 12px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    cursor: pointer; transition: all .2s;
+    font-family: 'DM Sans', sans-serif; direction: ltr;
+  }
+  .quiz-opt:hover:not(.disabled) { border-color: var(--gold); color: var(--gold); }
+  .quiz-opt.correct { border-color: var(--green); background: rgba(74,140,111,0.15); color: #6fcfa6; }
+  .quiz-opt.wrong   { border-color: var(--red);   background: rgba(196,92,58,0.1);  color: #e0836a; }
+  .quiz-opt.disabled { cursor: default; }
+  .quiz-next {
+    display: none; width: 100%; margin-top: 14px;
+    padding: 14px; background: var(--gold); color: #0f0e0c;
+    border: none; border-radius: 14px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all .2s; direction: ltr;
+  }
+  .quiz-next:hover { background: var(--gold-light); }
+  .quiz-result {
+    text-align: center; padding: 40px 20px; direction: ltr;
+  }
+  .result-score { font-size: 64px; font-weight: 300; color: var(--gold); display: block; }
+  .result-label { font-size: 18px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+  .result-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; }
+
+  /* Audio feedback */
+  .speak-feedback {
+    display: none; position: fixed; bottom: 110px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 18px;
+    font-size: 13px; color: var(--gold);
+    z-index: 50; direction: ltr;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from { transform: translateX(-50%) translateY(10px); opacity:0; } }
+
+  .learned-badge {
+    display: inline-block; background: rgba(74,140,111,0.2);
+    color: #6fcfa6; border-radius: 99px; padding: 2px 8px;
+    font-size: 10px; margin-left: 6px; direction: ltr;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">د</div>
+      <div>
+        <div class="logo-text">DariLearn</div>
+        <div class="logo-sub">دری یاد بگیر</div>
+      </div>
+    </div>
+    <div class="xp-pill" id="xp-display">⭐ 0 XP</div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="showScreen('alphabet')">
+      <span class="nav-icon">أ</span>Alphabet
+    </button>
+    <button class="nav-btn" onclick="showScreen('vocab')">
+      <span class="nav-icon">🖼</span>Wörter
+    </button>
+    <button class="nav-btn" onclick="showScreen('sentences')">
+      <span class="nav-icon">💬</span>Sätze
+    </button>
+    <button class="nav-btn" onclick="showScreen('quiz')">
+      <span class="nav-icon">🎯</span>Quiz
+    </button>
+  </div>
+
+  <!-- ALPHABET SCREEN -->
+  <div class="screen active" id="screen-alphabet">
+    <div class="section-title">Dari Alphabet — الفبای دری</div>
+    <div class="alphabet-grid" id="alphabet-grid"></div>
+  </div>
+
+  <!-- VOCAB SCREEN -->
+  <div class="screen" id="screen-vocab">
+    <div class="section-title">Wörter mit Bildern — کلمات</div>
+    <div class="vocab-categories" id="vocab-cats"></div>
+    <div class="vocab-grid" id="vocab-grid"></div>
+  </div>
+
+  <!-- SENTENCES SCREEN -->
+  <div class="screen" id="screen-sentences">
+    <div class="section-title">Sätze — جملات</div>
+    <div id="sentences-list"></div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="screen-quiz">
+    <div class="section-title">Quiz — امتحان</div>
+    <div class="quiz-progress"><div class="quiz-progress-fill" id="quiz-bar" style="width:0%"></div></div>
+    <div id="quiz-content"></div>
+  </div>
+
+</div>
+
+<!-- Letter Modal -->
+<div class="modal-overlay" id="letter-modal">
+  <div class="modal">
+    <span class="modal-letter" id="ml-letter"></span>
+    <div class="modal-name" id="ml-name"></div>
+    <div class="modal-trans" id="ml-trans"></div>
+    <button class="btn-play" onclick="speakLetter()" id="ml-play">🔊 Aussprache hören</button>
+    <div class="modal-example">
+      <span class="modal-example-word" id="ml-word"></span>
+      <span class="modal-example-latin" id="ml-wordlat"></span>
+    </div>
+    <div style="direction:ltr">
+      <button class="btn btn-ghost" onclick="closeModal()">Schließen</button>
+      <button class="btn btn-gold" onclick="markLearned()">✓ Gelernt</button>
+    </div>
+  </div>
+</div>
+
+<div class="speak-feedback" id="speak-fb"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────
+
+const ALPHABET = [
+  { letter:'ا', name:'Alef', latin:'a / ā', example:'آب', exLatin:'āb (Wasser)' },
+  { letter:'ب', name:'Be',   latin:'b',     example:'بابا', exLatin:'bābā (Vater)' },
+  { letter:'پ', name:'Pe',   latin:'p',     example:'پدر', exLatin:'pedar (Vater)' },
+  { letter:'ت', name:'Te',   latin:'t',     example:'تاک', exLatin:'tāk (Rebe)' },
+  { letter:'ث', name:'Se',   latin:'s',     example:'ثروت', exLatin:'servat (Reichtum)' },
+  { letter:'ج', name:'Jim',  latin:'j',     example:'جنگل', exLatin:'jangal (Wald)' },
+  { letter:'چ', name:'Che',  latin:'ch',    example:'چای', exLatin:'chāy (Tee)' },
+  { letter:'ح', name:'He',   latin:'h',     example:'حال', exLatin:'hāl (Zustand)' },
+  { letter:'خ', name:'Khe',  latin:'kh',    example:'خانه', exLatin:'khāna (Haus)' },
+  { letter:'د', name:'Dal',  latin:'d',     example:'دست', exLatin:'dast (Hand)' },
+  { letter:'ذ', name:'Zal',  latin:'z',     example:'ذهن', exLatin:'zehn (Geist)' },
+  { letter:'ر', name:'Re',   latin:'r',     example:'روز', exLatin:'ruz (Tag)' },
+  { letter:'ز', name:'Ze',   latin:'z',     example:'زمین', exLatin:'zamīn (Erde)' },
+  { letter:'ژ', name:'Zhe',  latin:'zh',    example:'ژاپن', exLatin:'zhāpon (Japan)' },
+  { letter:'س', name:'Sin',  latin:'s',     example:'سر', exLatin:'sar (Kopf)' },
+  { letter:'ش', name:'Shin', latin:'sh',    example:'شب', exLatin:'shab (Nacht)' },
+  { letter:'ص', name:'Sad',  latin:'s',     example:'صبر', exLatin:'sabr (Geduld)' },
+  { letter:'ض', name:'Zad',  latin:'z',     example:'ضعیف', exLatin:'zaif (schwach)' },
+  { letter:'ط', name:'Toi',  latin:'t',     example:'طلا', exLatin:'talā (Gold)' },
+  { letter:'ظ', name:'Zoi',  latin:'z',     example:'ظلم', exLatin:'zolm (Unrecht)' },
+  { letter:'ع', name:'Ain',  latin:"'a",    example:'علم', exLatin:"'elm (Wissen)"},
+  { letter:'غ', name:'Ghain',latin:'gh',    example:'غار', exLatin:'ghār (Höhle)' },
+  { letter:'ف', name:'Fe',   latin:'f',     example:'فکر', exLatin:'fekr (Gedanke)' },
+  { letter:'ق', name:'Qaf',  latin:'q',     example:'قلب', exLatin:'qalb (Herz)' },
+  { letter:'ک', name:'Kaf',  latin:'k',     example:'کتاب', exLatin:'ketāb (Buch)' },
+  { letter:'گ', name:'Gaf',  latin:'g',     example:'گل', exLatin:'gol (Blume)' },
+  { letter:'ل', name:'Lam',  latin:'l',     example:'لب', exLatin:'lab (Lippe)' },
+  { letter:'م', name:'Mim',  latin:'m',     example:'مادر', exLatin:'mādar (Mutter)' },
+  { letter:'ن', name:'Nun',  latin:'n',     example:'نور', exLatin:'nūr (Licht)' },
+  { letter:'و', name:'Waw',  latin:'w / o', example:'وطن', exLatin:'watan (Heimat)' },
+  { letter:'ه', name:'He',   latin:'h',     example:'هوا', exLatin:'hawā (Luft)' },
+  { letter:'ی', name:'Ye',   latin:'y / i', example:'یار', exLatin:'yār (Freund)' },
+];
+
+const VOCAB = {
+  'Familie': [
+    { dari:'مادر', ph:'mādar', de:'Mutter', emoji:'👩' },
+    { dari:'پدر',  ph:'pedar', de:'Vater',  emoji:'👨' },
+    { dari:'خواهر',ph:'khwāhar',de:'Schwester',emoji:'👧' },
+    { dari:'برادر',ph:'barādar',de:'Bruder',emoji:'👦' },
+    { dari:'فرزند',ph:'farzand',de:'Kind',  emoji:'🧒' },
+    { dari:'خانواده',ph:'khānwāda',de:'Familie',emoji:'👨‍👩‍👧‍👦' },
+  ],
+  'Natur': [
+    { dari:'آب',   ph:'āb',    de:'Wasser', emoji:'💧' },
+    { dari:'آتش',  ph:'ātash', de:'Feuer',  emoji:'🔥' },
+    { dari:'کوه',  ph:'kuh',   de:'Berg',   emoji:'⛰️' },
+    { dari:'دریا', ph:'daryā', de:'Meer',   emoji:'🌊' },
+    { dari:'آسمان',ph:'āsmān', de:'Himmel', emoji:'☀️' },
+    { dari:'گل',   ph:'gol',   de:'Blume',  emoji:'🌸' },
+  ],
+  'Essen': [
+    { dari:'نان',  ph:'nān',   de:'Brot',  emoji:'🫓' },
+    { dari:'چای',  ph:'chāy',  de:'Tee',   emoji:'🍵' },
+    { dari:'برنج', ph:'berenj',de:'Reis',  emoji:'🍚' },
+    { dari:'گوشت', ph:'gosht', de:'Fleisch',emoji:'🥩' },
+    { dari:'میوه', ph:'mewa',  de:'Obst',  emoji:'🍎' },
+    { dari:'شیر',  ph:'shir',  de:'Milch', emoji:'🥛' },
+  ],
+  'Körper': [
+    { dari:'سر',   ph:'sar',   de:'Kopf',  emoji:'🧠' },
+    { dari:'دست',  ph:'dast',  de:'Hand',  emoji:'✋' },
+    { dari:'چشم',  ph:'chashm',de:'Auge',  emoji:'👁️' },
+    { dari:'دل',   ph:'del',   de:'Herz',  emoji:'❤️' },
+    { dari:'پا',   ph:'pā',    de:'Fuß',   emoji:'🦶' },
+    { dari:'دهان', ph:'dahān', de:'Mund',  emoji:'👄' },
+  ],
+};
+
+const SENTENCES = [
+  { dari:'سلام! حال شما چطور است؟', ph:'Salām! Hāl-e shomā chetour ast?', de:'Hallo! Wie geht es Ihnen?', tag:'Begrüßung' },
+  { dari:'اسم من ... است.', ph:'Esm-e man ... ast.', de:'Mein Name ist ...', tag:'Vorstellung' },
+  { dari:'ممنون، بسیار خوب.', ph:'Mamnun, besyār khub.', de:'Danke, sehr gut.', tag:'Alltag' },
+  { dari:'لطفاً کمی آهسته‌تر صحبت کنید.', ph:'Lotfan kami āhesta-tar sohbat konid.', de:'Bitte sprechen Sie etwas langsamer.', tag:'Hilfreich' },
+  { dari:'من دری یاد می‌گیرم.', ph:'Man Dari yād mi-giram.', de:'Ich lerne Dari.', tag:'Lernen' },
+  { dari:'این چقدر قیمت دارد؟', ph:'In cheqadr qeymat dārad?', de:'Was kostet das?', tag:'Einkauf' },
+  { dari:'کجا هستم؟', ph:'Kojā hastam?', de:'Wo bin ich?', tag:'Orientierung' },
+  { dari:'خداحافظ! روز خوش!', ph:'Khodāhāfez! Ruz-e khosh!', de:'Auf Wiedersehen! Schönen Tag!', tag:'Abschied' },
+];
+
+// Quiz questions pool
+const QUIZ_POOL = [
+  ...VOCAB['Familie'].map(v => ({ type:'vocab', q: v.dari, ph: v.ph, answer: v.de,
+    opts: shuffle([v.de, 'Bruder','Schwester','Kind','Mutter','Vater'].filter(o=>o!==v.de).slice(0,3).concat(v.de)) })),
+  ...VOCAB['Natur'].map(v => ({ type:'vocab', q: v.dari, ph: v.ph, answer: v.de,
+    opts: shuffle([v.de,'Berg','Wasser','Feuer','Meer','Blume'].filter(o=>o!==v.de).slice(0,3).concat(v.de)) })),
+  ...ALPHABET.slice(0,10).map(a => ({ type:'letter', q: a.letter, ph: a.name, answer: a.name,
+    opts: shuffle([a.name,...ALPHABET.filter(x=>x.name!==a.name).slice(0,3).map(x=>x.name)]) })),
+];
+
+// ── STATE ─────────────────────────────────────────────────────────
+let xp = 0;
+let learned = new Set();
+let currentCat = 'Familie';
+let quizIdx = 0;
+let quizQuestions = [];
+let currentLetter = null;
+let answered = false;
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function shuffle(a) { return [...a].sort(()=>Math.random()-.5); }
+
+function addXP(n) {
+  xp += n;
+  document.getElementById('xp-display').textContent = `⭐ ${xp} XP`;
+}
+
+function speak(text, lang='fa-IR') {
+  if (!window.speechSynthesis) { showFeedback('🔊 Audio nicht verfügbar'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = 0.8;
+  window.speechSynthesis.speak(u);
+}
+
+function showFeedback(msg) {
+  const el = document.getElementById('speak-fb');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 2000);
+}
+
+// ── SCREENS ───────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const idx = ['alphabet','vocab','sentences','quiz'].indexOf(name);
+  if(idx>=0) btns[idx].classList.add('active');
+  if(name==='quiz') startQuiz();
+}
+
+// ── ALPHABET ──────────────────────────────────────────────────────
+function renderAlphabet() {
+  const grid = document.getElementById('alphabet-grid');
+  grid.innerHTML = ALPHABET.map((a,i) => `
+    <div class="letter-card ${learned.has('alpha-'+i)?'learned':''}" onclick="openLetter(${i})">
+      <span class="letter-arabic">${a.letter}</span>
+      <span class="letter-latin">${a.latin}</span>
+      <span class="letter-name">${a.name}</span>
+    </div>
+  `).join('');
+}
+
+function openLetter(i) {
+  const a = ALPHABET[i];
+  currentLetter = i;
+  document.getElementById('ml-letter').textContent = a.letter;
+  document.getElementById('ml-name').textContent = a.name;
+  document.getElementById('ml-trans').textContent = 'Aussprache: ' + a.latin;
+  document.getElementById('ml-word').textContent = a.example;
+  document.getElementById('ml-wordlat').textContent = a.exLatin;
+  document.getElementById('letter-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('letter-modal').classList.remove('open');
+}
+
+function speakLetter() {
+  if(currentLetter===null) return;
+  speak(ALPHABET[currentLetter].letter);
+  speak(ALPHABET[currentLetter].example);
+  showFeedback('🔊 ' + ALPHABET[currentLetter].name);
+}
+
+function markLearned() {
+  if(currentLetter===null) return;
+  learned.add('alpha-'+currentLetter);
+  addXP(5);
+  closeModal();
+  renderAlphabet();
+}
+
+// ── VOCABULARY ────────────────────────────────────────────────────
+function renderVocabCats() {
+  const cats = document.getElementById('vocab-cats');
+  cats.innerHTML = Object.keys(VOCAB).map(c => `
+    <button class="cat-btn ${c===currentCat?'active':''}" onclick="selectCat('${c}')">${c}</button>
+  `).join('');
+}
+
+function selectCat(c) {
+  currentCat = c;
+  renderVocabCats();
+  renderVocab();
+}
+
+function renderVocab() {
+  const grid = document.getElementById('vocab-grid');
+  grid.innerHTML = VOCAB[currentCat].map((v,i) => `
+    <div class="vocab-card" onclick="speakVocab('${v.dari}','${v.de}')">
+      <span class="vocab-emoji">${v.emoji}</span>
+      <span class="vocab-dari">${v.dari}</span>
+      <span class="vocab-phonetic">${v.ph}</span>
+      <span class="vocab-german">${v.de}</span>
+      <span class="play-icon">▶</span>
+    </div>
+  `).join('');
+}
+
+function speakVocab(dari, de) {
+  speak(dari);
+  showFeedback('🔊 ' + de);
+  addXP(1);
+}
+
+// ── SENTENCES ─────────────────────────────────────────────────────
+function renderSentences() {
+  document.getElementById('sentences-list').innerHTML = SENTENCES.map((s,i) => `
+    <div class="sentence-card" onclick="speakSentence(${i})">
+      <span class="sentence-dari">${s.dari}</span>
+      <span class="sentence-phonetic">${s.ph}</span>
+      <span class="sentence-german">${s.de}</span>
+      <div class="sentence-actions">
+        <span class="tag-pill">${s.tag}</span>
+        <span class="tag-pill">🔊 Tippen zum Hören</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function speakSentence(i) {
+  speak(SENTENCES[i].dari);
+  showFeedback('🔊 ' + SENTENCES[i].de);
+  addXP(2);
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────
+function startQuiz() {
+  quizQuestions = shuffle(QUIZ_POOL).slice(0,8);
+  quizIdx = 0;
+  answered = false;
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const bar = document.getElementById('quiz-bar');
+  bar.style.width = (quizIdx / quizQuestions.length * 100) + '%';
+
+  if(quizIdx >= quizQuestions.length) {
+    showResult(); return;
+  }
+
+  const q = quizQuestions[quizIdx];
+  const label = q.type === 'letter' ? 'Was ist dieser Buchstabe?' : 'Was bedeutet dieses Wort?';
+
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="quiz-question">
+      <div class="quiz-prompt">${label}</div>
+      <span class="quiz-dari">${q.q}</span>
+      <span class="quiz-phonetic">${q.ph}</span>
+    </div>
+    <div class="quiz-options">
+      ${q.opts.map(o => `
+        <button class="quiz-opt" onclick="checkAnswer(this,'${o.replace(/'/g,"\\'")}','${q.answer.replace(/'/g,"\\'")}')">
+          ${o}
+        </button>
+      `).join('')}
+    </div>
+    <button class="quiz-next" id="quiz-next-btn" onclick="nextQuestion()">Weiter →</button>
+  `;
+  answered = false;
+}
+
+function checkAnswer(btn, chosen, correct) {
+  if(answered) return;
+  answered = true;
+  document.querySelectorAll('.quiz-opt').forEach(b => {
+    b.classList.add('disabled');
+    if(b.textContent.trim() === correct) b.classList.add('correct');
+  });
+  if(chosen === correct) {
+    btn.classList.add('correct');
+    addXP(10);
+    showFeedback('✓ Richtig! +10 XP');
+  } else {
+    btn.classList.add('wrong');
+    showFeedback('✗ Falsch — ' + correct);
+  }
+  document.getElementById('quiz-next-btn').style.display = 'block';
+}
+
+function nextQuestion() {
+  quizIdx++;
+  renderQuiz();
+}
+
+function showResult() {
+  const pct = Math.round((xp / (quizQuestions.length * 10)) * 100);
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="quiz-result">
+      <span class="result-score">${quizIdx}/${quizQuestions.length}</span>
+      <div class="result-label">Quiz abgeschlossen!</div>
+      <div class="result-sub">Du hast ${xp} XP gesammelt.<br>آفرین! (āfarīn — Bravo!)</div>
+      <button class="btn btn-gold" onclick="startQuiz()" style="margin-right:10px">Nochmal spielen</button>
+      <button class="btn btn-ghost" onclick="showScreen('vocab')">Weiter lernen</button>
+    </div>
+  `;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderAlphabet();
+renderVocabCats();
+renderVocab();
+renderSentences();
+</script>
+</body>
+</html>
